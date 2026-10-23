@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Urgency {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketCategory {
+  IT
+  MEDICAL_EQUIPMENT
+  FACILITIES
+  HR
+  PHARMACY
+  OTHER
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  replies   TicketReply[]
+}
+
+model Staff {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  password   String
+  name       String
+  department String
+  phone      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tickets    Ticket[]
+}
+
+model Ticket {
+  id              String         @id @default(cuid())
+  ticketNumber    String         @unique
+  subject         String
+  description     String
+  urgency         Urgency        @default(MEDIUM)
+  category        TicketCategory @default(OTHER)
+  status          TicketStatus   @default(OPEN)
+  staffName       String
+  staffDepartment String
+  staffPhone      String
+  staffEmail      String?
+  staffId         String?
+  staff           Staff?         @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  replies         TicketReply[]
+
+  @@index([status])
+  @@index([urgency])
+  @@index([createdAt])
+  @@index([staffId])
+  @@index([ticketNumber])
+}
+
+model TicketReply {
+  id        String   @id @default(cuid())
+  message   String
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  adminId   String
+  admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+}
